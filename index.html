@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ラグランジュの未定乗数法：z=xy と楕円制約</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #f5f7fa;
+      color: #20242a;
+    }
+    header {
+      padding: 18px 22px 10px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+    }
+    h1 { margin: 0 0 6px; font-size: 1.35rem; }
+    .subtitle { color: #666; font-size: .95rem; }
+    #plot {
+      width: 100%;
+      height: calc(100vh - 210px);
+      min-height: 520px;
+      background: white;
+    }
+    .info {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 12px 18px 18px;
+      background: white;
+    }
+    .card {
+      padding: 11px 14px;
+      border: 1px solid #ddd;
+      border-radius: 9px;
+      background: #fafafa;
+      line-height: 1.55;
+    }
+    .card strong { display: block; margin-bottom: 4px; }
+    @media (max-width: 700px) {
+      .info { grid-template-columns: 1fr; }
+      #plot { height: 68vh; min-height: 430px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>ラグランジュの未定乗数法：<i>z = xy</i> と楕円制約</h1>
+  <div class="subtitle">
+    制約：<i>x² + 4y² = 4</i>　／　目的関数：<i>f(x,y)=xy</i>
+    ―― ドラッグで回転、ホイールで拡大・縮小できます。
+  </div>
+</header>
+
+<div id="plot"></div>
+
+<div class="info">
+  <div class="card">
+    <strong>最大値</strong>
+    f = 1<br>
+    (√2, 1/√2), (-√2, -1/√2)
+  </div>
+  <div class="card">
+    <strong>最小値</strong>
+    f = −1<br>
+    (√2, −1/√2), (-√2, 1/√2)
+  </div>
+  <div class="card">
+    <strong>ラグランジュ条件</strong>
+    ∇f = λ∇g<br>
+    y = 2λx,　x = 8λy
+  </div>
+</div>
+
+<script>
+(function () {
+  const n = 55;
+  const xs = [];
+  const ys = [];
+  const zs = [];
+
+  for (let i = 0; i < n; i++) {
+    const x = -2 + 4 * i / (n - 1);
+    xs.push(x);
+    ys.push(x);
+  }
+
+  const X = [], Y = [], Z = [];
+  for (let j = 0; j < n; j++) {
+    const y = -1.25 + 2.5 * j / (n - 1);
+    const rowX = [], rowY = [], rowZ = [];
+    for (let i = 0; i < n; i++) {
+      const x = -2 + 4 * i / (n - 1);
+      rowX.push(x);
+      rowY.push(y);
+      rowZ.push(x * y);
+    }
+    X.push(rowX); Y.push(rowY); Z.push(rowZ);
+  }
+
+  // Ellipse x=2 cos(t), y=sin(t), lifted to z=xy=sin(2t)
+  const t = [];
+  const ex = [], ey = [], ez = [];
+  for (let i = 0; i <= 360; i++) {
+    const a = 2 * Math.PI * i / 360;
+    t.push(a);
+    ex.push(2 * Math.cos(a));
+    ey.push(Math.sin(a));
+    ez.push(2 * Math.cos(a) * Math.sin(a));
+  }
+
+  const pts = [
+    [Math.sqrt(2), 1/Math.sqrt(2), 1, "最大値 1"],
+    [-Math.sqrt(2), -1/Math.sqrt(2), 1, "最大値 1"],
+    [Math.sqrt(2), -1/Math.sqrt(2), -1, "最小値 −1"],
+    [-Math.sqrt(2), 1/Math.sqrt(2), -1, "最小値 −1"]
+  ];
+
+  const surface = {
+    type: "surface",
+    x: X, y: Y, z: Z,
+    opacity: 0.72,
+    colorscale: "Viridis",
+    showscale: false,
+    name: "z = xy",
+    hovertemplate: "x=%{x:.3f}<br>y=%{y:.3f}<br>z=%{z:.3f}<extra>z=xy</extra>"
+  };
+
+  const curve = {
+    type: "scatter3d",
+    mode: "lines",
+    x: ex, y: ey, z: ez,
+    line: { width: 8 },
+    name: "制約曲線",
+    hovertemplate: "x=%{x:.3f}<br>y=%{y:.3f}<br>f=xy=%{z:.3f}<extra>楕円制約</extra>"
+  };
+
+  const pointTrace = {
+    type: "scatter3d",
+    mode: "markers+text",
+    x: pts.map(p => p[0]),
+    y: pts.map(p => p[1]),
+    z: pts.map(p => p[2]),
+    text: pts.map(p => p[3]),
+    textposition: "top center",
+    marker: { size: 7 },
+    name: "候補点",
+    hovertemplate: "(%{x:.3f}, %{y:.3f}, %{z:.3f})<extra>候補点</extra>"
+  };
+
+  const zeroPts = {
+    type: "scatter3d",
+    mode: "markers",
+    x: [0, 0],
+    y: [1, -1],
+    z: [0, 0],
+    marker: { size: 4, opacity: 0.25 },
+    name: "参考： (0,±1)",
+    hovertemplate: "(%{x}, %{y}, %{z})<extra>ラグランジュ条件を満たさない</extra>"
+  };
+
+  const layout = {
+    margin: { l: 0, r: 0, t: 10, b: 0 },
+    scene: {
+      xaxis: { title: "x", range: [-2.15, 2.15], zeroline: true },
+      yaxis: { title: "y", range: [-1.35, 1.35], zeroline: true },
+      zaxis: { title: "z = xy", range: [-1.5, 1.5], zeroline: true },
+      aspectmode: "manual",
+      aspectratio: { x: 1.55, y: 1.0, z: 0.95 },
+      camera: {
+        eye: { x: 1.55, y: 1.45, z: 1.25 }
+      }
+    },
+    legend: {
+      x: 0.02, y: 0.98,
+      bgcolor: "rgba(255,255,255,0.82)"
+    },
+    paper_bgcolor: "white"
+  };
+
+  Plotly.newPlot("plot", [surface, curve, pointTrace, zeroPts], layout, {
+    responsive: true,
+    displaylogo: false
+  });
+})();
+</script>
+</body>
+</html>

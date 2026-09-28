@@ -71,7 +71,7 @@
   </div>
   <div class="card">
     <strong>ラグランジュ条件</strong>
-    ∇f = λ∇g<br>
+    (f<sub>x</sub>, f<sub>y</sub>) = λ(g<sub>x</sub>, g<sub>y</sub>)<br>
     y = 2λx,　x = 8λy
   </div>
 </div>
@@ -147,7 +147,7 @@
     z: pts.map(p => p[2]),
     text: pts.map(p => p[3]),
     textposition: "top center",
-    marker: { size: 7 },
+    marker: { size: 4 },
     name: "候補点",
     hovertemplate: "(%{x:.3f}, %{y:.3f}, %{z:.3f})<extra>候補点</extra>"
   };
@@ -158,7 +158,7 @@
     x: [0, 0],
     y: [1, -1],
     z: [0, 0],
-    marker: { size: 4, opacity: 0.25 },
+    marker: { size: 3, opacity: 0.25 },
     name: "参考： (0,±1)",
     hovertemplate: "(%{x}, %{y}, %{z})<extra>ラグランジュ条件を満たさない</extra>"
   };
